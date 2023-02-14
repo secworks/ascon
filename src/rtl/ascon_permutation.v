@@ -64,11 +64,11 @@ module ascon_permutation(
       reg x3, x3_1, x3_2, x3_3;
       reg x4, x4_1, x4_2, x4_3;
 
-      x0 = ps[0];
-      x1 = ps[1];
-      x2 = ps[2];
-      x3 = ps[3];
-      x4 = ps[4];
+      x0 = x[4];
+      x1 = x[3];
+      x2 = x[2];
+      x3 = x[1];
+      x4 = x[0];
 
       x0_1 = x0 ^ x4;
       x2_1 = x2 ^ x1;
@@ -91,7 +91,7 @@ module ascon_permutation(
       x2_4 = ~x2_3;
       x3_3 = x3_2 ^ x2_3;
 
-      ps = {x4_3, x3_3, x2_4, x1_3, x0_4};
+      ps = {x0_4, x1_3, x2_4, x3_3, x4_3};
     end
   endfunction // ps
 
