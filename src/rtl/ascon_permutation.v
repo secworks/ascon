@@ -83,7 +83,7 @@ module ascon_permutation(
       x0_3 = x0_1 ^ x1_1;
       x1_2 = x1 ^ x2_2;
       x2_3 = x2_1 ^ x3_1;
-      x3_2 = x3_1 ^ x4_2;
+      x3_2 = x3 ^ x4_2;
       x4_3 = x4_1 ^ x0_2;
 
       x0_4 = x0_3 ^ x4_3;
