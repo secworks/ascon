@@ -99,42 +99,48 @@ module ascon_permutation(
   //----------------------------------------------------------------
   // Wires.
   //----------------------------------------------------------------
-  reg [63 : 0] tmp_x0;
-  reg [63 : 0] tmp_x1;
-  reg [63 : 0] tmp_x2;
-  reg [63 : 0] tmp_x3;
-  reg [63 : 0] tmp_x4;
+  reg [63 : 0] ps_x0;
+  reg [63 : 0] ps_x1;
+  reg [63 : 0] ps_x2;
+  reg [63 : 0] ps_x3;
+  reg [63 : 0] ps_x4;
 
 
   //----------------------------------------------------------------
   // Concurrent connectivity for ports.
   //----------------------------------------------------------------
-  assign x0_prim = tmp_x0;
-  assign x1_prim = tmp_x1;
-  assign x2_prim = tmp_x2;
-  assign x3_prim = tmp_x3;
-  assign x4_prim = tmp_x4;
+  assign x0_prim = ps_x0;
+  assign x1_prim = ps_x1;
+  assign x2_prim = ps_x2;
+  assign x3_prim = ps_x3;
+  assign x4_prim = ps_x4;
 
 
   //----------------------------------------------------------------
-  // p_logic
+  // ps_logic
   //----------------------------------------------------------------
   always @*
-    begin : p_logic
+    begin : ps_logic
       integer i;
-      reg [4 : 0] tmp_ps;
+      reg [4 : 0] x;
+      reg [4 : 0] xp;
 
       for (i = 0 ; i < 64 ; i = i + 1) begin
-	tmp_x0[i] = x0[i];
-	tmp_x1[i] = x1[i];
-	tmp_x2[i] = x2[i];
-	tmp_x3[i] = x3[i];
-	tmp_x4[i] = x4[i];
+	x[4] = x0[i];
+	x[3] = x1[i];
+	x[2] = x2[i];
+	x[1] = x3[i];
+	x[0] = x4[i];
 
+	xp = ps(x);
 
+	ps_x0[i] = xp[4];
+	ps_x1[i] = xp[3];
+	ps_x2[i] = xp[2];
+	ps_x3[i] = xp[1];
+	ps_x4[i] = xp[0];
       end
-
-    end // p_logic
+    end // ps_logic
 
 endmodule // ascon_permutation
 
