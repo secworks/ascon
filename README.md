@@ -1,5 +1,5 @@
 # ascon
-Verilog implementation of the ASCON lightweight authenticated encryption and hashing algorithm
+Verilog implementation of the [Ascon](https://ascon.iaik.tugraz.at/) lightweight authenticated encryption and hashing algorithm.
 
 
 ## Status
