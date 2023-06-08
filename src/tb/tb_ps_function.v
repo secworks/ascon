@@ -129,6 +129,95 @@ module tb_ps_function();
     end
   endfunction // ref_ps
 
+  function [319 : 0] ps64(input [319 : 0] x);
+    begin : ps
+      reg [63 : 0] x0, x0_1, x0_2, x0_3, x0_4;
+      reg [63 : 0] x1, x1_1, x1_2, x1_3;
+      reg [63 : 0] x2, x2_1, x2_2, x2_3, x2_4;
+      reg [63 : 0] x3, x3_1, x3_2, x3_3;
+      reg [63 : 0] x4, x4_1, x4_2, x4_3;
+
+      x0 = x[319 : 256];
+      x1 = x[255 : 192];
+      x2 = x[191 : 128];
+      x3 = x[127 : 064];
+      x4 = x[063 : 000];
+
+      x0_1 = x0 ^ x4;
+      x2_1 = x2 ^ x1;
+      x4_1 = x4 ^ x3;
+
+      x0_2 = ~x0_1 & x1;
+      x1_1 = ~x1 & x2_1;
+      x2_2 = ~x2_1 & x3;
+      x3_1 = ~x3 & x4_1;
+      x4_2 = ~x4_1 & x0_1;
+
+      x0_3 = x0_1 ^ x1_1;
+      x1_2 = x1 ^ x2_2;
+      x2_3 = x2_1 ^ x3_1;
+      x3_2 = x3 ^ x4_2;
+      x4_3 = x4_1 ^ x0_2;
+
+      x0_4 = x0_3 ^ x4_3;
+      x1_3 = x1_2 ^ x0_3;
+      x2_4 = ~x2_3;
+      x3_3 = x3_2 ^ x2_3;
+
+      ps = {x0_4, x1_3, x2_4, x3_3, x4_3};
+    end
+  endfunction // ps64
+
+  function [319 : 0] ref_ps64(input [319 : 0] x);
+    begin : ref_ps
+      reg [63 : 0] x0, t0;
+      reg [63 : 0] x1, t1;
+      reg [63 : 0] x2, t2;
+      reg [63 : 0] x3, t3;
+      reg [63 : 0] x4, t4;
+
+      x0 = x[4];
+      x1 = x[3];
+      x2 = x[2];
+      x3 = x[1];
+      x4 = x[0];
+
+      x0 = x0 ^ x4;
+      x2 = x2 ^ x1;
+      x4 = x4 ^ x3;
+
+      t0  = x0;
+      t1  = x1;
+      t2  = x2;
+      t3  = x3;
+      t4  = x4;
+
+      t0 = ~t0;
+      t1 = ~t1;
+      t2 = ~t2;
+      t3 = ~t3;
+      t4 = ~t4;
+
+      t0 = t0 & x1;
+      t1 = t1 & x2;
+      t2 = t2 & x3;
+      t3 = t3 & x4;
+      t4 = t4 & x0;
+
+      x0 = x0 ^ t1;
+      x1 = x1 ^ t2;
+      x2 = x2 ^ t3;
+      x3 = x3 ^ t4;
+      x4 = x4 ^ t0;
+
+      x1 = x1 ^ x0;
+      x0 = x0 ^ x4;
+      x3 = x3 ^ x2;
+      x2 = ~x2;
+
+      ref_ps = {x0, x1, x2, x3, x4};
+    end
+  endfunction // ref_ps64
 
   initial
     begin : testloop
