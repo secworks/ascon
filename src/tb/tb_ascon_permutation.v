@@ -1,7 +1,7 @@
 //======================================================================
 //
-// tb_ps_function.v
-// ----------------
+// tb_ascon_permutation.v
+// ----------------------
 // Testbench for the PS function, performing substitution.
 // Reference function from Ascon specification:
 // https://ascon.iaik.tugraz.at/files/asconv12-nist.pdf
@@ -38,7 +38,8 @@
 //
 //======================================================================
 
-module tb_ps_function();
+module tb_ascon_permutation();
+
   function [4 : 0] ps(input [4 : 0] x);
     begin : ps
       reg x0, x0_1, x0_2, x0_3, x0_4;
@@ -235,4 +236,4 @@ module tb_ps_function();
 	#(1);
       end
     end
-endmodule // tb_ps_function
+endmodule // tb_ascon_permutation
