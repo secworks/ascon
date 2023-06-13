@@ -41,6 +41,11 @@
 ASCON_PERMUTATION_SRC = ../src/rtl/ascon_permutation.v
 TB_ASCON_PERMUTATION_SRC = ../src/tb/tb_ascon_permutation.v
 
+ASCON_CORE_SRC = ../src/rtl/ascon_core.v $(ASCON_PERMUTATION_SRC)
+
+ASCON_TOP_SRC = ../src/rtl/ascon.v $(ASCON_CORE_SRC)
+TB_ASCON_TOP_SRC = ../src/tb/tb_ascon.v
+
 
 # Tools and flags.
 CC= iverilog
@@ -51,14 +56,18 @@ LINT_FLAGS = +1364-2001ext+ --lint-only  -Wall -Wno-fatal -Wno-DECLFILENAME
 
 
 # Targets.
-all: permutation.sim
+all: top.sim permutation.sim
+
+
+top.sim:  $(TB_ASCON_TOP_SRC) $(ASCON_TOP_SRC)
+	$(CC) $(CC_FLAGS) -o $@ $^
 
 
 permutation.sim:  $(TB_ASCON_PERMUTATION_SRC) $(ASCON_PERMUTATION_SRC)
 	$(CC) $(CC_FLAGS) -o $@ $^
 
 
-lint: $(ASCON_PERMUTATION_SRC)
+lint: $(ASCON_TOP_SRC)
 	$(LINT) $(LINT_FLAGS)  $^
 
 
