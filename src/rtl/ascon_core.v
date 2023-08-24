@@ -39,14 +39,14 @@
 `default_nettype none
 
 module ascon_core(
-                   input wire           clk,
-                   input wire           reset_n,
+                   input wire            clk,
+                   input wire            reset_n,
 
-                   input wire           encdec,
-                   input wire           next,
-                   output wire          ready,
+                   input wire            encdec,
+                   input wire            next,
+                   output wire           ready,
 
-                   input wire [127 : 0] key,
+                   input wire [127 : 0]  key,
 
                    input wire [127 : 0]  block,
                    output wire [127 : 0] result
@@ -71,6 +71,10 @@ module ascon_core(
   reg [2 : 0]  core_ctrl_new;
   reg          core_ctrl_we;
 
+  reg [127 : 0] result_reg;
+  reg [127 : 0] result_new;
+  reg           result_we;
+
 
   //----------------------------------------------------------------
   // Wires.
@@ -81,6 +85,7 @@ module ascon_core(
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
   assign ready  = ready_reg;
+  assign result = result_reg;
 
 
   //----------------------------------------------------------------
@@ -93,9 +98,14 @@ module ascon_core(
   always @ (posedge clk or negedge reset_n)begin: reg_update
     if (!reset_n) begin
       core_ctrl_reg <= CTRL_IDLE;
+      result_reg    <= 128'h0;
     end
 
     else begin
+      if (result_we) begin
+	result_reg <= result_new;
+      end
+
       if (core_ctrl_we) begin
         core_ctrl_reg <= core_ctrl_new;
       end
@@ -110,14 +120,18 @@ module ascon_core(
   //----------------------------------------------------------------
   always @*
     begin : ascon_core_ctrl
+      result_we     = 1'h0;
       ready_new     = 1'h0;
       ready_we      = 1'h0;
       core_ctrl_new = CTRL_IDLE;
       core_ctrl_we  = 1'h0;
 
+      result_new = block ^ key;
+
       case (core_ctrl_reg)
         CTRL_IDLE: begin
           if (next) begin
+	    result_we     = 1'h1;
 	    ready_new     = 1'h0;
 	    ready_we      = 1'h1;
             core_ctrl_new = CTRL_DONE;
@@ -128,7 +142,6 @@ module ascon_core(
         CTRL_DONE: begin
           ready_new     = 1'h1;
           ready_we      = 1'h1;
-          update_state  = 1'h1;
           core_ctrl_new = CTRL_IDLE;
           core_ctrl_we  = 1'h1;
         end
