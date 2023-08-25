@@ -63,33 +63,39 @@ module ascon_core(
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
-  reg [63 : 0] x0_reg;
-  reg [63 : 0] x0_new;
-  reg          x0_we;
+  reg [63 : 0]  x0_reg;
+  reg [63 : 0]  x0_new;
+  reg           x0_we;
 
-  reg [63 : 0] x1_reg;
-  reg [63 : 0] x1_new;
-  reg          x1_we;
+  reg [63 : 0]  x1_reg;
+  reg [63 : 0]  x1_new;
+  reg           x1_we;
 
-  reg [63 : 0] x2_reg;
-  reg [63 : 0] x2_new;
-  reg          x2_we;
+  reg [63 : 0]  x2_reg;
+  reg [63 : 0]  x2_new;
+  reg           x2_we;
 
-  reg [63 : 0] x3_reg;
-  reg [63 : 0] x3_new;
-  reg          x3_we;
+  reg [63 : 0]  x3_reg;
+  reg [63 : 0]  x3_new;
+  reg           x3_we;
 
-  reg [63 : 0] x4_reg;
-  reg [63 : 0] x4_new;
-  reg          x4_we;
+  reg [63 : 0]  x4_reg;
+  reg [63 : 0]  x4_new;
+  reg           x4_we;
 
-  reg          ready_reg;
-  reg          ready_new;
-  reg          ready_we;
+  reg           ready_reg;
+  reg           ready_new;
+  reg           ready_we;
 
-  reg [2 : 0]  core_ctrl_reg;
-  reg [2 : 0]  core_ctrl_new;
-  reg          core_ctrl_we;
+  reg [3 : 0]   round_ctr_reg;
+  reg [3 : 0]   round_ctr_new;
+  reg           round_ctr_rst;
+  reg           round_ctr_inc;
+  reg           round_ctr_we;
+
+  reg [2 : 0]   ascon_ctrl_reg;
+  reg [2 : 0]   ascon_ctrl_new;
+  reg           ascon_ctrl_we;
 
   reg [127 : 0] result_reg;
   reg [127 : 0] result_new;
@@ -119,13 +125,14 @@ module ascon_core(
   //----------------------------------------------------------------
   always @ (posedge clk or negedge reset_n)begin: reg_update
     if (!reset_n) begin
-      x0_reg        <= 64'h0;
-      x1_reg        <= 64'h0;
-      x2_reg        <= 64'h0;
-      x3_reg        <= 64'h0;
-      x4_reg        <= 64'h0;
-      result_reg    <= 128'h0;
-      core_ctrl_reg <= CTRL_IDLE;
+      x0_reg         <= 64'h0;
+      x1_reg         <= 64'h0;
+      x2_reg         <= 64'h0;
+      x3_reg         <= 64'h0;
+      x4_reg         <= 64'h0;
+      round_ctr_reg  <= 4'h0;
+      result_reg     <= 128'h0;
+      ascon_ctrl_reg <= CTRL_IDLE;
     end
 
     else begin
@@ -149,12 +156,16 @@ module ascon_core(
 	x4_reg <= x4_new;
       end
 
+      if (round_ctr_we) begin
+	round_ctr_reg <= round_ctr_new;
+      end
+
       if (result_we) begin
 	result_reg <= result_new;
       end
 
-      if (core_ctrl_we) begin
-        core_ctrl_reg <= core_ctrl_new;
+      if (ascon_ctrl_we) begin
+        ascon_ctrl_reg <= ascon_ctrl_new;
       end
     end
   end // reg_update
@@ -181,43 +192,64 @@ module ascon_core(
 
 
   //----------------------------------------------------------------
-  // ascon_core_ctrl
+  // round_ctr_logic
+  //----------------------------------------------------------------
+  always @*
+    begin : round_ctr
+      round_ctr_new = 4'h0;
+      round_ctr_we  = 1'h0;
+
+      if (round_ctr_rst) begin
+	round_ctr_we = 1'h1;
+      end
+
+      if (round_ctr_inc) begin
+	round_ctr_new = round_ctr_reg + 1'h1;
+	round_ctr_we  = 1'h1;
+      end
+    end
+
+
+  //----------------------------------------------------------------
+  // ascon_ctrl
   //
   // Control FSM for aes core.
   //----------------------------------------------------------------
   always @*
-    begin : ascon_core_ctrl
-      result_we     = 1'h0;
-      ready_new     = 1'h0;
-      ready_we      = 1'h0;
-      state_init    = 1'h0
-      state_update  = 1'h0
-      core_ctrl_new = CTRL_IDLE;
-      core_ctrl_we  = 1'h0;
+    begin : ascon_ctrl
+      result_we      = 1'h0;
+      ready_new      = 1'h0;
+      ready_we       = 1'h0;
+      state_init     = 1'h0;
+      state_update   = 1'h0;
+      round_ctr_rst  = 1'h0;
+      round_ctr_inc  = 1'h0;
+      ascon_ctrl_new = CTRL_IDLE;
+      ascon_ctrl_we  = 1'h0;
 
       result_new = block ^ key;
 
-      case (core_ctrl_reg)
+      case (ascon_ctrl_reg)
         CTRL_IDLE: begin
           if (next) begin
 	    result_we     = 1'h1;
 	    ready_new     = 1'h0;
 	    ready_we      = 1'h1;
-            core_ctrl_new = CTRL_DONE;
-            core_ctrl_we  = 1'h1;
+            ascon_ctrl_new = CTRL_DONE;
+            ascon_ctrl_we  = 1'h1;
           end
         end
 
         CTRL_DONE: begin
           ready_new     = 1'h1;
           ready_we      = 1'h1;
-          core_ctrl_new = CTRL_IDLE;
-          core_ctrl_we  = 1'h1;
+          ascon_ctrl_new = CTRL_IDLE;
+          ascon_ctrl_we  = 1'h1;
         end
 
         default: begin end
-      endcase // case (core_ctrl_reg)
-    end // ascon_core_ctrl
+      endcase // case (ascon_ctrl_reg)
+    end // ascon_ctrl
 
 endmodule // ascon_core
 
