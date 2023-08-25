@@ -63,6 +63,26 @@ module ascon_core(
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
+  reg [63 : 0] x0_reg;
+  reg [63 : 0] x0_new;
+  reg          x0_we;
+
+  reg [63 : 0] x1_reg;
+  reg [63 : 0] x1_new;
+  reg          x1_we;
+
+  reg [63 : 0] x2_reg;
+  reg [63 : 0] x2_new;
+  reg          x2_we;
+
+  reg [63 : 0] x3_reg;
+  reg [63 : 0] x3_new;
+  reg          x3_we;
+
+  reg [63 : 0] x4_reg;
+  reg [63 : 0] x4_new;
+  reg          x4_we;
+
   reg          ready_reg;
   reg          ready_new;
   reg          ready_we;
@@ -79,6 +99,8 @@ module ascon_core(
   //----------------------------------------------------------------
   // Wires.
   //----------------------------------------------------------------
+  reg state_init;
+  reg state_update;
 
 
   //----------------------------------------------------------------
@@ -97,11 +119,36 @@ module ascon_core(
   //----------------------------------------------------------------
   always @ (posedge clk or negedge reset_n)begin: reg_update
     if (!reset_n) begin
-      core_ctrl_reg <= CTRL_IDLE;
+      x0_reg        <= 64'h0;
+      x1_reg        <= 64'h0;
+      x2_reg        <= 64'h0;
+      x3_reg        <= 64'h0;
+      x4_reg        <= 64'h0;
       result_reg    <= 128'h0;
+      core_ctrl_reg <= CTRL_IDLE;
     end
 
     else begin
+      if (x0_we) begin
+	x0_reg <= x0_new;
+      end
+
+      if (x1_we) begin
+	x1_reg <= x1_new;
+      end
+
+      if (x2_we) begin
+	x2_reg <= x2_new;
+      end
+
+      if (x3_we) begin
+	x3_reg <= x3_new;
+      end
+
+      if (x4_we) begin
+	x4_reg <= x4_new;
+      end
+
       if (result_we) begin
 	result_reg <= result_new;
       end
@@ -114,6 +161,26 @@ module ascon_core(
 
 
   //----------------------------------------------------------------
+  // state_logic
+  // The actual logic to initialize and update the state.
+  //----------------------------------------------------------------
+  always @*
+    begin : state_logic
+      x0_we = 1'h0;
+      x1_we = 1'h0;
+      x2_we = 1'h0;
+      x3_we = 1'h0;
+      x4_we = 1'h0;
+
+      x0_new = 64'h0;
+      x1_new = 64'h0;
+      x2_new = 64'h0;
+      x3_new = 64'h0;
+      x4_new = 64'h0;
+    end
+
+
+  //----------------------------------------------------------------
   // ascon_core_ctrl
   //
   // Control FSM for aes core.
@@ -123,6 +190,8 @@ module ascon_core(
       result_we     = 1'h0;
       ready_new     = 1'h0;
       ready_we      = 1'h0;
+      state_init    = 1'h0
+      state_update  = 1'h0
       core_ctrl_new = CTRL_IDLE;
       core_ctrl_we  = 1'h0;
 
