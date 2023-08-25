@@ -61,6 +61,49 @@ module ascon_core(
 
 
   //----------------------------------------------------------------
+  // functions.
+  //----------------------------------------------------------------
+  // add round constants - pc
+  function [63 : 0] pc(input [63 : 0] x, input [3 : 0] r);
+    begin
+      reg [7 : 0] xor_val;
+      case (r)
+	0:  xor_val = x[7 : 0] ^ 8'hf0;
+	1:  xor_val = x[7 : 0] ^ 8'he1;
+	2:  xor_val = x[7 : 0] ^ 8'hd2;
+	3:  xor_val = x[7 : 0] ^ 8'hc3;
+	4:  xor_val = x[7 : 0] ^ 8'hb4;
+	5:  xor_val = x[7 : 0] ^ 8'ha5;
+	6:  xor_val = x[7 : 0] ^ 8'h96;
+	7:  xor_val = x[7 : 0] ^ 8'h87;
+	8:  xor_val = x[7 : 0] ^ 8'h78;
+	9:  xor_val = x[7 : 0] ^ 8'h69;
+	10: xor_val = x[7 : 0] ^ 8'h5a;
+	11: xor_val = x[7 : 0] ^ 8'h4b;
+	default begin
+	  xor_val = x[7 : 0];
+	end
+      endcase
+      pc = {x[63 : 8], xor_val};
+    end
+  endfunction // pc
+
+  // apply substitution - ps
+  function [4 : 0] ps(input [4 : 0] x);
+    begin
+      ps = x;
+    end
+  endfunction // ps
+
+  // linear layer - pl
+  function [63 : 0] pl(input [63 : 0] x);
+    begin
+      pl = x;
+    end
+  endfunction // pl
+
+
+  //----------------------------------------------------------------
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
   reg [63 : 0]  x0_reg;
