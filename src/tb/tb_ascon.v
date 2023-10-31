@@ -176,7 +176,7 @@ module tb_ascon();
   //----------------------------------------------------------------
   task reset_dut;
     begin
-      $display("*** Toggle reset.");
+      $display("--- Toggle reset.");
       tb_reset_n = 0;
       #(2 * CLK_PERIOD);
       tb_reset_n = 1;
@@ -193,11 +193,11 @@ module tb_ascon();
     begin
       if (error_ctr == 0)
         begin
-          $display("*** All %02d test cases completed successfully", tc_ctr);
+          $display("--- All %02d test cases completed successfully", tc_ctr);
         end
       else
         begin
-          $display("*** %02d tests completed - %02d test cases did not complete successfully.",
+          $display("--- %02d tests completed - %02d test cases did not complete successfully.",
                    tc_ctr, error_ctr);
         end
     end
@@ -237,7 +237,7 @@ module tb_ascon();
     begin
       if (DEBUG)
         begin
-          $display("*** Writing 0x%08x to 0x%02x.", word, address);
+          $display("--- Writing 0x%08x to 0x%02x.", word, address);
           $display("");
         end
 
@@ -270,7 +270,7 @@ module tb_ascon();
 
       if (DEBUG)
         begin
-          $display("*** Reading 0x%08x from 0x%02x.", read_data, address);
+          $display("--- Reading 0x%08x from 0x%02x.", read_data, address);
           $display("");
         end
     end

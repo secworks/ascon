@@ -39,19 +39,21 @@
 `default_nettype none
 
 module ascon_core(
-                   input wire            clk,
-                   input wire            reset_n,
+                  input wire            clk,
+                  input wire            reset_n,
 
-                   input wire            encdec,
-                   input wire            init,
-                   input wire            next,
-                   output wire           ready,
+                  input wire            encdec,
+                  input wire            init,
+                  input wire            update,
+                  input wire            finalize,
 
-                   input wire [127 : 0]  key,
+                  output wire           ready,
 
-                   input wire [127 : 0]  block,
-                   output wire [127 : 0] result
-                  );
+                  input wire [127 : 0]  key,
+
+                  input wire [127 : 0]  block,
+                  output wire [127 : 0] result
+                 );
 
 
   //----------------------------------------------------------------
@@ -275,7 +277,7 @@ module ascon_core(
 
       case (ascon_ctrl_reg)
         CTRL_IDLE: begin
-          if (next) begin
+          if (update) begin
 	    result_we     = 1'h1;
 	    ready_new     = 1'h0;
 	    ready_we      = 1'h1;
