@@ -67,7 +67,7 @@ module ascon_core(
   // functions.
   //----------------------------------------------------------------
   // add round constants - pc
-  function [63 : 0] pc(input [63 : 0] x, input [3 : 0] r);
+  function automatic [63 : 0] pc(input [63 : 0] x, input [3 : 0] r);
     begin
       reg [7 : 0] xor_val;
       case (r)
@@ -92,14 +92,14 @@ module ascon_core(
   endfunction // pc
 
   // apply substitution - ps
-  function [4 : 0] ps(input [4 : 0] x);
+  function automatic [4 : 0] ps(input [4 : 0] x);
     begin
       ps = x;
     end
   endfunction // ps
 
   // linear layer - pl
-  function [63 : 0] pl(input [63 : 0] x);
+  function automatic [63 : 0] pl(input [63 : 0] x);
     begin
       pl = x;
     end
