@@ -38,10 +38,8 @@
 #===================================================================
 
 # Sources.
-ASCON_PERMUTATION_SRC = ../src/rtl/ascon_permutation.v
-TB_ASCON_PERMUTATION_SRC = ../src/tb/tb_ascon_permutation.v
-
-ASCON_CORE_SRC = ../src/rtl/ascon_core.v $(ASCON_PERMUTATION_SRC)
+ASCON_CORE_SRC = ../src/rtl/ascon_core.v
+TB_ASCON_CORE_SRC = ../src/rtl/ascon_core.v
 
 ASCON_TOP_SRC = ../src/rtl/ascon.v $(ASCON_CORE_SRC)
 TB_ASCON_TOP_SRC = ../src/tb/tb_ascon.v
@@ -52,18 +50,18 @@ CC= iverilog
 CC_FLAGS= -Wall
 
 LINT= verilator
-LINT_FLAGS = +1364-2001ext+ --lint-only  -Wall -Wno-fatal -Wno-DECLFILENAME
+LINT_FLAGS = +1364-2005ext+ --lint-only  -Wall -Wno-fatal -Wno-DECLFILENAME
 
 
 # Targets.
-all: top.sim permutation.sim
+all: top.sim core.sim
 
 
 top.sim:  $(TB_ASCON_TOP_SRC) $(ASCON_TOP_SRC)
 	$(CC) $(CC_FLAGS) -o $@ $^
 
 
-permutation.sim:  $(TB_ASCON_PERMUTATION_SRC) $(ASCON_PERMUTATION_SRC)
+core.sim:  $(TB_ASCON_CORE_SRC) $(ASCON_CORE_SRC)
 	$(CC) $(CC_FLAGS) -o $@ $^
 
 

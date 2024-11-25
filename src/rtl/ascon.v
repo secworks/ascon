@@ -93,12 +93,19 @@ module ascon(
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
-  reg next_reg;
-  reg next_new;
-
   reg encdec_reg;
   reg ad_reg;
   reg config_we;
+
+  reg init_reg;
+  reg init_new;
+
+  reg next_reg;
+  reg next_new;
+
+  reg finalize_reg;
+  reg finalize_new;
+
 
   reg [31 : 0] block_reg [0 : 3];
   reg          block_we;
@@ -135,7 +142,9 @@ module ascon(
                   .reset_n(reset_n),
 
                   .encdec(encdec_reg),
+                  .init(init_reg),
                   .next(next_reg),
+                  .finalize(finalize_reg),
                   .ready(core_ready),
 
                   .key(core_key),
@@ -158,14 +167,17 @@ module ascon(
       if (!reset_n) begin
         for (i = 0 ; i < 4 ; i = i + 1) begin
           block_reg[i] <= 32'h0;
-          key_reg[i] <= 32'h0;
-	end
-
-        next_reg   <= 1'h0;
-        encdec_reg <= 1'h0;
+          key_reg[i]   <= 32'h0;
+	    end
+        init_reg     <= 1'h0;
+        next_reg     <= 1'h0;
+        finalize_reg <= 1'h0;
+        encdec_reg   <= 1'h0;
       end
       else begin
-        next_reg <= next_new;
+        init_reg     <= init_new;
+        next_reg     <= next_new;
+        finalize_reg <= finalize_new;
 
         if (config_we) begin
           encdec_reg <= write_data[CONFIG_ENCDEC_BIT];
@@ -173,14 +185,14 @@ module ascon(
 
         if (key_we) begin
           key_reg[address[1 : 0]] <= write_data;
-	end
+	    end
 
         if (block_we) begin
           block_reg[address[0]] <= write_data;
         end
       end
     end // reg_update
-
+  
 
   //----------------------------------------------------------------
   // api
@@ -189,7 +201,9 @@ module ascon(
   //----------------------------------------------------------------
   always @*
     begin : api
+      init_new      = 1'h0;
       next_new      = 1'h0;
+      finalize_new  = 1'h0;
       config_we     = 1'h0;
       key_we        = 1'h0;
       block_we      = 1'h0;

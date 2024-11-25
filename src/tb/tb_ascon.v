@@ -151,19 +151,19 @@ module tb_ascon();
       $display("State of DUT");
       $display("------------");
       $display("Cycle: %08d", cycle_ctr);
-      $display("Inputs and outputs:");
-      $display("");
-      $display("Core inputs and outputs:");
-      $display("next: 0x%01x, encdec: 0x%01x, ready: 0x%01x",
-               dut.core.next, dut.core.encdec, dut.core.ready);
-      $display("key:    0x%032x", dut.core.key);
-      $display("block:  0x%016x", dut.core.block);
-      $display("result: 0x%016x", dut.core.result);
-      $display("");
-      $display("Core state:");
-      $display("k0: 0x%016x", dut.core.k0_reg);
-      $display("k1: 0x%016x", dut.core.k1_reg);
-      $display("kp: 0x%016x", dut.core.kp_reg);
+//      $display("Inputs and outputs:");
+//      $display("");
+//      $display("Core inputs and outputs:");
+//      $display("next: 0x%01x, encdec: 0x%01x, ready: 0x%01x",
+//               dut.core.next, dut.core.encdec, dut.core.ready);
+//      $display("key:    0x%032x", dut.core.key);
+//      $display("block:  0x%016x", dut.core.block);
+//      $display("result: 0x%016x", dut.core.result);
+//      $display("");
+//      $display("Core state:");
+//      $display("k0: 0x%016x", dut.core.k0_reg);
+//      $display("k1: 0x%016x", dut.core.k1_reg);
+//      $display("kp: 0x%016x", dut.core.kp_reg);
       $display("");
     end
   endtask // dump_dut_state
