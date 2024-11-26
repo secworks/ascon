@@ -56,8 +56,10 @@ module ascon_permutation(
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  localparam CTRL_IDLE   = 1'h0;
-  localparam CTRL_ROUNDS = 1'h1;
+  localparam CTRL_IDLE   = 2'h0;
+  localparam CTRL_WAIT1  = 2'h1;
+  localparam CTRL_WAIT2  = 2'h2;
+  localparam CTRL_ROUNDS = 2'h3;
 
 
   //----------------------------------------------------------------
@@ -197,9 +199,9 @@ module ascon_permutation(
   reg           round_ctr_inc;
   reg           round_ctr_we;
 
-  reg           ascon_ctrl_reg;
-  reg           ascon_ctrl_new;
-  reg           ascon_ctrl_we;
+  reg  [1 : 0]  ascon_ctrl_reg;
+  reg  [1 : 0]  ascon_ctrl_new;
+  reg  [1 : 0]  ascon_ctrl_we;
 
 
   //----------------------------------------------------------------
@@ -228,6 +230,7 @@ module ascon_permutation(
       s2_reg         <= 64'h0;
       s3_reg         <= 64'h0;
       s4_reg         <= 64'h0;
+      ready_reg      <= 1'h1;
       num_rounds_reg <= 4'h0;
       round_ctr_reg  <= 4'h0;
       ascon_ctrl_reg <= CTRL_IDLE;
@@ -242,6 +245,10 @@ module ascon_permutation(
         s4_reg <= s4_new;
       end
 
+      if (ready_we) begin
+        ready_reg <= ready_new;
+      end
+      
       if (num_rounds_we) begin
         num_rounds_reg <= num_rounds;
       end
@@ -373,7 +380,7 @@ module ascon_permutation(
             ascon_ctrl_we  = 1'h1;
           end
         end
-        
+          
         CTRL_ROUNDS: begin
           if (round_ctr_reg == num_rounds_reg) begin
 	        ready_new      = 1'h1;

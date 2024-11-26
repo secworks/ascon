@@ -131,14 +131,14 @@ module tb_ascon_permutation();
   //----------------------------------------------------------------
   task reset_dut;
     begin
-      $display("--- DUT before reset:");
-      display_state();
+//      $display("--- DUT before reset:");
+//      display_state();
       $display("--- Toggling reset.");
       tb_reset_n = 0;
       #(2 * CLK_PERIOD);
       tb_reset_n = 1;
-      $display("--- DUT after reset:");
-      display_state();
+//      $display("--- DUT after reset:");
+//      display_state();
     end
   endtask // reset_dut
 
@@ -150,11 +150,8 @@ module tb_ascon_permutation();
   //----------------------------------------------------------------
   task display_state;
     begin
-      $display("State of the DUT");
-      $display("----------------");
-      $display("Cycle: %016d", cycle_ctr);
-      $display("");
-
+      $display("State of the DUT at cycle %016d", cycle_ctr);
+      $display("------------------------------------------");
       $display("Inputs and outputs:");
       $display("start: %1x, ready: %1x", tb_start, tb_ready);
       $display("num_rounds: block:  %02d", tb_num_rounds);
@@ -164,6 +161,10 @@ module tb_ascon_permutation();
       $display("");
 
       $display("Internal state:");
+      $display("num_rounds: 0x%1x, round_ctr_reg: 0x%1x", 
+               dut.num_rounds_reg, dut.round_ctr_reg);
+      $display("ascon_ctrl_reg: 0x%1x, ascon_ctrl_new: 0x%1x, ascon_ctrl_we: %1x",
+               dut.ascon_ctrl_reg, dut.ascon_ctrl_new, dut.ascon_ctrl_we);
       $display("");
     end
   endtask // display_state
@@ -219,17 +220,22 @@ module tb_ascon_permutation();
     begin : tc1
       inc_tc();
       enable_monitor();
-      
-      tb_start = 1'h1;
-      $display("tc1: Block permutation started at cycle %016d", cycle_ctr);
-      #(2 * CLK_PERIOD);
 
+      tb_num_rounds = 4'hf;
+      tb_start      = 1'h1;
+      $display("");
+      $display("tc1: Block permutation started at cycle %016d", cycle_ctr);
+      #(CLK_PERIOD);
+      tb_start = 1'h0;
+
+      #(CLK_PERIOD);
       while (tb_ready == 0) begin
         #(CLK_PERIOD);
       end
 
       $display("tc1: Block permutation should be completed at cycle %016d", cycle_ctr);
       $display("tc1: tb_result: 0x%040x", tb_result);      
+      $display("");
 
       disable_monitor();
     end
@@ -253,3 +259,4 @@ module tb_ascon_permutation();
       $finish;
     end
 endmodule // tb_ascon_permutation
+
