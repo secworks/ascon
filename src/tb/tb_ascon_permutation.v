@@ -2,13 +2,12 @@
 //
 // tb_ascon_permutation.v
 // ----------------------
-// Testbench for the PS function, performing substitution.
-// Reference function from Ascon specification:
+// Testbench for the Ascon permutation module.
 // https://ascon.iaik.tugraz.at/files/asconv12-nist.pdf
 //
 //
 // Author: Joachim Strömbergson
-// Copyright (c) 2022, Assured AB
+// Copyright (c) 2024, Assured AB
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or
@@ -39,201 +38,147 @@
 //======================================================================
 
 module tb_ascon_permutation();
+  localparam DEBUG           = 0;
+  localparam DUMP_WAIT       = 0;
+  localparam CLK_HALF_PERIOD = 1;
+  localparam CLK_PERIOD      = 2 * CLK_HALF_PERIOD;
 
-  function [4 : 0] ps(input [4 : 0] x);
-    begin : ps
-      reg x0, x0_1, x0_2, x0_3, x0_4;
-      reg x1, x1_1, x1_2, x1_3;
-      reg x2, x2_1, x2_2, x2_3, x2_4;
-      reg x3, x3_1, x3_2, x3_3;
-      reg x4, x4_1, x4_2, x4_3;
+  //----------------------------------------------------------------
+  // Register and wire declarations.
+  //----------------------------------------------------------------
+  reg [31 : 0]   cycle_ctr;
+  reg [31 : 0]   error_ctr;
+  reg [31 : 0]   tc_ctr;
+  reg            tb_monitor;
 
-      x0 = x[4];
-      x1 = x[3];
-      x2 = x[2];
-      x3 = x[1];
-      x4 = x[0];
+  reg            tb_clk;
+  reg            tb_reset_n;
+  reg [319 : 0]  tb_block;
+  reg [3 : 0]    tb_num_rounds;
+  reg            tb_start;
+  wire           tb_ready;
+  wire [319 : 0] tb_result;
 
-      x0_1 = x0 ^ x4;
-      x2_1 = x2 ^ x1;
-      x4_1 = x4 ^ x3;
 
-      x0_2 = ~x0_1 & x1;
-      x1_1 = ~x1 & x2_1;
-      x2_2 = ~x2_1 & x3;
-      x3_1 = ~x3 & x4_1;
-      x4_2 = ~x4_1 & x0_1;
+  //----------------------------------------------------------------
+  // Device Under Test.
+  //----------------------------------------------------------------
+  ascon_permutation dut(
+                        .clk(tb_clk),
+                        .reset_n(tb_reset_n),
+                        .block(tb_block),
+                        .num_rounds(tb_num_rounds),
+                        .start(tb_start),
+                        
+                        .ready(tb_ready),
+                        .result(tb_result)
+                        );
 
-      x0_3 = x0_1 ^ x1_1;
-      x1_2 = x1 ^ x2_2;
-      x2_3 = x2_1 ^ x3_1;
-      x3_2 = x3 ^ x4_2;
-      x4_3 = x4_1 ^ x0_2;
 
-      x0_4 = x0_3 ^ x4_3;
-      x1_3 = x1_2 ^ x0_3;
-      x2_4 = ~x2_3;
-      x3_3 = x3_2 ^ x2_3;
+  //----------------------------------------------------------------
+  // clk_gen
+  //
+  // Always running clock generator process.
+  //----------------------------------------------------------------
+  always
+    begin : clk_gen
+      #CLK_HALF_PERIOD;
+      tb_clk = !tb_clk;
+    end // clk_gen
 
-      ps = {x0_4, x1_3, x2_4, x3_3, x4_3};
+
+  //----------------------------------------------------------------
+  // init_sim()
+  //
+  // Initialize all counters and testbed functionality as well
+  // as setting the DUT inputs to defined values.
+  //----------------------------------------------------------------
+  task init_sim;
+    begin
+      cycle_ctr     = 0;
+      error_ctr     = 0;
+      tc_ctr        = 0;
+
+      tb_monitor    = 0;
+      tb_clk        = 0;
+      tb_reset_n    = 1;
+      tb_block      = 320'h0;
+      tb_num_rounds = 4'h0;
+      tb_start      = 0;
     end
-  endfunction // ps
+  endtask // init_sim
 
-  function [4 : 0] ref_ps(input [4 : 0] x);
-    begin : ref_ps
-      reg x0, t0;
-      reg x1, t1;
-      reg x2, t2;
-      reg x3, t3;
-      reg x4, t4;
 
-      x0 = x[4];
-      x1 = x[3];
-      x2 = x[2];
-      x3 = x[1];
-      x4 = x[0];
-
-      x0 = x0 ^ x4;
-      x2 = x2 ^ x1;
-      x4 = x4 ^ x3;
-
-      t0  = x0;
-      t1  = x1;
-      t2  = x2;
-      t3  = x3;
-      t4  = x4;
-
-      t0 = ~t0;
-      t1 = ~t1;
-      t2 = ~t2;
-      t3 = ~t3;
-      t4 = ~t4;
-
-      t0 = t0 & x1;
-      t1 = t1 & x2;
-      t2 = t2 & x3;
-      t3 = t3 & x4;
-      t4 = t4 & x0;
-
-      x0 = x0 ^ t1;
-      x1 = x1 ^ t2;
-      x2 = x2 ^ t3;
-      x3 = x3 ^ t4;
-      x4 = x4 ^ t0;
-
-      x1 = x1 ^ x0;
-      x0 = x0 ^ x4;
-      x3 = x3 ^ x2;
-      x2 = ~x2;
-
-      ref_ps = {x0, x1, x2, x3, x4};
+  //----------------------------------------------------------------
+  // reset_dut()
+  //
+  // Toggle reset to put the DUT into a well known state.
+  //----------------------------------------------------------------
+  task reset_dut;
+    begin
+      $display("--- DUT before reset:");
+      dump_dut_state();
+      $display("--- Toggling reset.");
+      tb_reset_n = 0;
+      #(2 * CLK_PERIOD);
+      tb_reset_n = 1;
+      $display("--- DUT after reset:");
+      dump_dut_state();
     end
-  endfunction // ref_ps
+  endtask // reset_dut
 
-  function [319 : 0] ps64(input [319 : 0] x);
-    begin : ps
-      reg [63 : 0] x0, x0_1, x0_2, x0_3, x0_4;
-      reg [63 : 0] x1, x1_1, x1_2, x1_3;
-      reg [63 : 0] x2, x2_1, x2_2, x2_3, x2_4;
-      reg [63 : 0] x3, x3_1, x3_2, x3_3;
-      reg [63 : 0] x4, x4_1, x4_2, x4_3;
 
-      x0 = x[319 : 256];
-      x1 = x[255 : 192];
-      x2 = x[191 : 128];
-      x3 = x[127 : 064];
-      x4 = x[063 : 000];
-
-      x0_1 = x0 ^ x4;
-      x2_1 = x2 ^ x1;
-      x4_1 = x4 ^ x3;
-
-      x0_2 = ~x0_1 & x1;
-      x1_1 = ~x1 & x2_1;
-      x2_2 = ~x2_1 & x3;
-      x3_1 = ~x3 & x4_1;
-      x4_2 = ~x4_1 & x0_1;
-
-      x0_3 = x0_1 ^ x1_1;
-      x1_2 = x1 ^ x2_2;
-      x2_3 = x2_1 ^ x3_1;
-      x3_2 = x3 ^ x4_2;
-      x4_3 = x4_1 ^ x0_2;
-
-      x0_4 = x0_3 ^ x4_3;
-      x1_3 = x1_2 ^ x0_3;
-      x2_4 = ~x2_3;
-      x3_3 = x3_2 ^ x2_3;
-
-      ps = {x0_4, x1_3, x2_4, x3_3, x4_3};
+  //----------------------------------------------------------------
+  // dump_dut_state()
+  //
+  // Dump the state of the dump when needed.
+  //----------------------------------------------------------------
+  task dump_dut_state;
+    begin
+      $display("State of DUT");
+      $display("------------");
+      $display("Cycle: %08d", cycle_ctr);
+      $display("Inputs and outputs:");
+      $display("");
+      $display("Internal states:");
+      $display("");
     end
-  endfunction // ps64
+  endtask // dump_dut_state
 
-  function [319 : 0] ref_ps64(input [319 : 0] x);
-    begin : ref_ps
-      reg [63 : 0] x0, t0;
-      reg [63 : 0] x1, t1;
-      reg [63 : 0] x2, t2;
-      reg [63 : 0] x3, t3;
-      reg [63 : 0] x4, t4;
 
-      x0 = x[4];
-      x1 = x[3];
-      x2 = x[2];
-      x3 = x[1];
-      x4 = x[0];
-
-      x0 = x0 ^ x4;
-      x2 = x2 ^ x1;
-      x4 = x4 ^ x3;
-
-      t0  = x0;
-      t1  = x1;
-      t2  = x2;
-      t3  = x3;
-      t4  = x4;
-
-      t0 = ~t0;
-      t1 = ~t1;
-      t2 = ~t2;
-      t3 = ~t3;
-      t4 = ~t4;
-
-      t0 = t0 & x1;
-      t1 = t1 & x2;
-      t2 = t2 & x3;
-      t3 = t3 & x4;
-      t4 = t4 & x0;
-
-      x0 = x0 ^ t1;
-      x1 = x1 ^ t2;
-      x2 = x2 ^ t3;
-      x3 = x3 ^ t4;
-      x4 = x4 ^ t0;
-
-      x1 = x1 ^ x0;
-      x0 = x0 ^ x4;
-      x3 = x3 ^ x2;
-      x2 = ~x2;
-
-      ref_ps = {x0, x1, x2, x3, x4};
+  //----------------------------------------------------------------
+  // display_test_result()
+  //
+  // Display the accumulated test results.
+  //----------------------------------------------------------------
+  task display_test_result;
+    begin
+      if (error_ctr == 0)
+        begin
+          $display("--- All %02d test cases completed successfully", tc_ctr);
+        end
+      else
+        begin
+          $display("--- %02d tests completed - %02d test cases did not complete successfully.",
+                   tc_ctr, error_ctr);
+        end
     end
-  endfunction // ref_ps64
+  endtask // display_test_result
 
+  
+  //----------------------------------------------------------------
+  //----------------------------------------------------------------
   initial
-    begin : testloop
-      integer j;
-      reg [5 : 0] i;
-      reg [4 : 0] x;
-      reg [4 : 0] xs;
-      reg [4 : 0] ref_xs;
+    begin : tb_ascon_permutation;
+      $display("--- Simulation of Ascon permutation started.");
+      $display("");
 
-      for (i = 0 ; i < 32 ; i = i + 1) begin
-	x = i[4 : 0];
-	xs = ps(x);
-	ref_xs = ref_ps(x);
-	$display("x: 0x%01x, xs: 0x%01x  <-->  xrf_xs: 0x%01x", x, xs, ref_xs);
-	#(1);
-      end
+      init_sim();
+      reset_dut();
+      display_test_result();
+
+      $display("");
+      $display("--- Simulation of Ascon permutation completed.");
+      $finish;
     end
 endmodule // tb_ascon_permutation
