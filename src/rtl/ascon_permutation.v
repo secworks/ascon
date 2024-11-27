@@ -199,9 +199,9 @@ module ascon_permutation(
   reg           round_ctr_inc;
   reg           round_ctr_we;
 
-  reg  [1 : 0]  ascon_ctrl_reg;
-  reg  [1 : 0]  ascon_ctrl_new;
-  reg  [1 : 0]  ascon_ctrl_we;
+  reg  [1 : 0]  ascon_permutation_ctrl_reg;
+  reg  [1 : 0]  ascon_permutation_ctrl_new;
+  reg  [1 : 0]  ascon_permutation_ctrl_we;
 
 
   //----------------------------------------------------------------
@@ -225,15 +225,15 @@ module ascon_permutation(
   //----------------------------------------------------------------
   always @ (posedge clk or negedge reset_n)begin: reg_update
     if (!reset_n) begin
-      s0_reg         <= 64'h0;
-      s1_reg         <= 64'h0;
-      s2_reg         <= 64'h0;
-      s3_reg         <= 64'h0;
-      s4_reg         <= 64'h0;
-      ready_reg      <= 1'h1;
-      num_rounds_reg <= 4'h0;
-      round_ctr_reg  <= 4'h0;
-      ascon_ctrl_reg <= CTRL_IDLE;
+      s0_reg                     <= 64'h0;
+      s1_reg                     <= 64'h0;
+      s2_reg                     <= 64'h0;
+      s3_reg                     <= 64'h0;
+      s4_reg                     <= 64'h0;
+      ready_reg                  <= 1'h1;
+      num_rounds_reg             <= 4'h0;
+      round_ctr_reg              <= 4'h0;
+      ascon_permutation_ctrl_reg <= CTRL_IDLE;
     end
 
     else begin
@@ -257,8 +257,8 @@ module ascon_permutation(
 	    round_ctr_reg <= round_ctr_new;
       end
       
-      if (ascon_ctrl_we) begin
-        ascon_ctrl_reg <= ascon_ctrl_new;
+      if (ascon_permutation_ctrl_we) begin
+        ascon_permutation_ctrl_reg <= ascon_permutation_ctrl_new;
       end
     end
   end // reg_update
@@ -351,23 +351,23 @@ module ascon_permutation(
 
 
   //----------------------------------------------------------------
-  // ascon_ctrl
+  // ascon_permutation_ctrl
   //
   // Control FSM for the permutation.
   //----------------------------------------------------------------
   always @*
-    begin : ascon_ctrl
-      state_set      = 1'h0;
-      state_we       = 1'h0;
-      num_rounds_we  = 1'h0;
-      ready_new      = 1'h0;
-      ready_we       = 1'h0;
-      round_ctr_rst  = 1'h0;
-      round_ctr_inc  = 1'h0;
-      ascon_ctrl_new = CTRL_IDLE;
-      ascon_ctrl_we  = 1'h0;
+    begin : ascon_permutation_ctrl
+      state_set                  = 1'h0;
+      state_we                   = 1'h0;
+      num_rounds_we              = 1'h0;
+      ready_new                  = 1'h0;
+      ready_we                   = 1'h0;
+      round_ctr_rst              = 1'h0;
+      round_ctr_inc              = 1'h0;
+      ascon_permutation_ctrl_new = CTRL_IDLE;
+      ascon_permutation_ctrl_we  = 1'h0;
       
-      case (ascon_ctrl_reg)
+      case (ascon_permutation_ctrl_reg)
         CTRL_IDLE: begin
           if (start) begin
             state_set      = 1'h1;
@@ -376,8 +376,8 @@ module ascon_permutation(
             round_ctr_rst  = 1'h1;
 	        ready_new      = 1'h0;
 	        ready_we       = 1'h1;
-            ascon_ctrl_new = CTRL_ROUNDS;
-            ascon_ctrl_we  = 1'h1;
+            ascon_permutation_ctrl_new = CTRL_ROUNDS;
+            ascon_permutation_ctrl_we  = 1'h1;
           end
         end
           
@@ -385,8 +385,8 @@ module ascon_permutation(
           if (round_ctr_reg == num_rounds_reg) begin
 	        ready_new      = 1'h1;
 	        ready_we       = 1'h1;
-            ascon_ctrl_new = CTRL_IDLE;
-            ascon_ctrl_we  = 1'h1;
+            ascon_permutation_ctrl_new = CTRL_IDLE;
+            ascon_permutation_ctrl_we  = 1'h1;
           end else begin
             state_we       = 1'h1;
             round_ctr_inc  = 1'h1;
@@ -394,8 +394,8 @@ module ascon_permutation(
         end
 
         default: begin end
-      endcase // case (ascon_ctrl_reg)
-    end // ascon_ctrl
+      endcase // case (ascon_permutation_ctrl_reg)
+    end // ascon_permutation_ctrl
 
 endmodule // ascon_core
 

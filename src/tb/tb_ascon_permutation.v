@@ -169,9 +169,8 @@ module tb_ascon_permutation();
       $display("");
       $display("num_rounds: 0x%1x, round_ctr_reg: 0x%1x", 
                dut.num_rounds_reg, dut.round_ctr_reg);
-      $display("ascon_ctrl_reg: 0x%1x, ascon_ctrl_new: 0x%1x, ascon_ctrl_we: %1x",
-               dut.ascon_ctrl_reg, dut.ascon_ctrl_new, dut.ascon_ctrl_we);
-
+      $display("ascon_permutation_ctrl_reg: 0x%1x, ascon_permutation_ctrl_new: 0x%1x, ascon_permutation_ctrl_we: %1x",
+               dut.ascon_permutation_ctrl_reg, dut.ascon_permutation_ctrl_new, dut.ascon_permutation_ctrl_we);
       $display("");
       $display("Permutation variables:");
       $display("s0_ps: 0x%08x", dut.state_logic.s0_pc);
