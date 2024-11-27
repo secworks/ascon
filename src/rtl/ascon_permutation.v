@@ -162,7 +162,7 @@ module ascon_permutation(
         29: ps = 5'h0a;
         
         30: ps = 5'h0f;
-        01: ps = 5'h17;
+        31: ps = 5'h17;
 	    default begin
 	    end
       endcase      
@@ -267,10 +267,10 @@ module ascon_permutation(
   //----------------------------------------------------------------
   // state_logic
   // The actual logic to initialize and update the state.
-  // The state logic is a composition of PL, PS and PC
+  // The state logic is a composition of PL, PS and PC.
   //----------------------------------------------------------------
   always @*
-    begin : round_logic
+    begin : state_logic
       integer i;
       reg [4 : 0] ps_in;
       reg [4 : 0] ps_out;
@@ -305,7 +305,7 @@ module ascon_permutation(
         s3_ps[i] = ps_out[3];
         s4_ps[i] = ps_out[4];
       end
-
+      
       // Linear diffusion
       s0_ls = pls0(s0_ps);
       s1_ls = pls1(s1_ps);

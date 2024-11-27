@@ -161,10 +161,20 @@ module tb_ascon_permutation();
       $display("");
 
       $display("Internal state:");
+      $display("s0_reg: 0x%08x, s0_new: 0x%08x", dut.s0_reg, dut.s0_new);
+      $display("s1_reg: 0x%08x, s1_new: 0x%08x", dut.s1_reg, dut.s1_new);
+      $display("s2_reg: 0x%08x, s2_new: 0x%08x", dut.s2_reg, dut.s2_new);
+      $display("s3_reg: 0x%08x, s3_new: 0x%08x", dut.s3_reg, dut.s3_new);
+      $display("s4_reg: 0x%08x, s4_new: 0x%08x", dut.s4_reg, dut.s4_new);
+      $display("");
       $display("num_rounds: 0x%1x, round_ctr_reg: 0x%1x", 
                dut.num_rounds_reg, dut.round_ctr_reg);
       $display("ascon_ctrl_reg: 0x%1x, ascon_ctrl_new: 0x%1x, ascon_ctrl_we: %1x",
                dut.ascon_ctrl_reg, dut.ascon_ctrl_new, dut.ascon_ctrl_we);
+
+      $display("");
+      $display("Permutation variables:");
+      $display("s0_ps: 0x%08x", dut.state_logic.s0_pc);
       $display("");
     end
   endtask // display_state
@@ -221,6 +231,7 @@ module tb_ascon_permutation();
       inc_tc();
       enable_monitor();
 
+      tb_block = {5{64'hdeadbabecafef00f}};
       tb_num_rounds = 4'hf;
       tb_start      = 1'h1;
       $display("");
@@ -240,6 +251,14 @@ module tb_ascon_permutation();
       disable_monitor();
     end
   endtask // tc!
+
+  task setup_vcd;
+    begin
+      $dumpfile("ascon_permutation_sim.vcd");
+      $dumpvars(0, tb_ascon_permutation);
+    end
+  endtask // setup_vcd
+  
   
   
   //----------------------------------------------------------------
@@ -250,7 +269,9 @@ module tb_ascon_permutation();
       $display("");
 
       init_sim();
+      setup_vcd();
       reset_dut();
+      
       tc1();
       display_test_result();
 
