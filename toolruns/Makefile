@@ -80,7 +80,7 @@ clean:
 	rm -f *.sim
 	rm -f *.log
 	rm -f *.txt
-
+	rm -f *.vcd
 
 help:
 	@echo "Build system for simulation of BLAKE2s core."
