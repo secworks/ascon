@@ -54,8 +54,8 @@ module tb_ascon_permutation();
   reg [319 : 0]  tb_block;
   reg [3 : 0]    tb_num_rounds;
   reg            tb_start;
+  wire [319 : 0] tb_state;
   wire           tb_ready;
-  wire [319 : 0] tb_result;
 
 
   //----------------------------------------------------------------
@@ -69,7 +69,7 @@ module tb_ascon_permutation();
                         .start(tb_start),
                         
                         .ready(tb_ready),
-                        .result(tb_result)
+                        .state(tb_state)
                         );
 
 
@@ -157,7 +157,7 @@ module tb_ascon_permutation();
       $display("num_rounds: block:  %02d", tb_num_rounds);
       $display("");
       $display("block:  0x%040x", tb_block);
-      $display("result: 0x%040x", tb_result);
+      $display("state: 0x%040x", tb_state);
       $display("");
 
       $display("Internal state:");
@@ -245,7 +245,7 @@ module tb_ascon_permutation();
       end
 
       $display("tc1: Block permutation should be completed at cycle %016d", cycle_ctr);
-      $display("tc1: tb_result: 0x%040x", tb_result);      
+      $display("tc1: tb_state: 0x%040x", tb_state);      
       $display("");
 
       disable_monitor();

@@ -59,16 +59,18 @@ module tb_ascon_core();
   reg [31 : 0] tc_ctr;
   reg          tb_monitor;
 
-  reg           tb_clk;
-  reg           tb_reset_n;
-  reg           tb_encdec;
-  reg           tb_init;
-  reg           tb_update;
-  reg           tb_finalize;
-  wire          tb_ready;
-  reg [127 : 0] tb_key;
-  reg [127 : 0]  tb_block;
+  reg            tb_clk;
+  reg            tb_reset_n;
+  reg            tb_init;
+  reg            tb_update;
+  reg            tb_finalize;
+  reg [2 ; 0]    tb_mode;
+  reg [127 : 0]  tb_key;
+  reg [127 : 0]  tb_nonce;
+  reg [127 : 0]  tb_data;
   wire [127 : 0] tb_result;
+  wire           tb_fail;
+  wire           tb_ready;
 
 
   //----------------------------------------------------------------
@@ -78,16 +80,19 @@ module tb_ascon_core();
                 .clk(tb_clk),
                 .reset_n(tb_reset_n),
 
-                .encdec(tb_encdec),
                 .init(tb_init),
                 .update(tb_update),
                 .finalize(tb_finalize),
-                .ready(tb_ready),
+                .mode(tb_mode),
 
                 .key(tb_key),
+                .nonce(tb_nonce),
+                .data(tb_data),
 
-                .block(tb_block),
-                .result(tb_result)
+                .result(tb_result),
+                .fail(tb_fail),
+                .ready(tb_ready)
+
                );
 
 

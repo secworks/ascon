@@ -42,17 +42,18 @@ module ascon_core(
                   input wire            clk,
                   input wire            reset_n,
 
-                  input wire            encdec,
                   input wire            init,
                   input wire            next,
                   input wire            finalize,
-
-                  output wire           ready,
-
+                  input wire [2 : 0]    mode,
+                  
                   input wire [127 : 0]  key,
-
-                  input wire [127 : 0]  block,
-                  output wire [127 : 0] result
+                  input wire [127 : 0]  nonce,
+                  input wire [127 : 0]  data,
+                  
+                  output wire [127 : 0] result,
+                  output wire           fail,
+                  output wire           ready
                  );
 
 
@@ -73,6 +74,10 @@ module ascon_core(
   reg           ready_new;
   reg           ready_we;
 
+  reg           fail_reg;
+  reg           fail_new;
+  reg           fail_we;
+
   reg [127 : 0] result_reg;
   reg [127 : 0] result_new;
   reg           result_we;
@@ -89,7 +94,7 @@ module ascon_core(
   reg [3 : 0]    permutation_num_rounds;
   reg            permutation_start;
   wire           permutation_ready;
-  wire [319 : 0] permutation_result;
+  wire [319 : 0] permutation_state;
 
 
   //----------------------------------------------------------------
@@ -100,18 +105,21 @@ module ascon_core(
     ascon_permutation_inst(
                            .clk(clk),
                            .reset_n(reset_n),
+
                            .block(permutation_block),
                            .num_rounds(permutation_num_rounds),
                            .start(permutation_start),
-                           .ready(permutation_ready),
-                           .result(permutation_result)
+
+                           .state(permutation_state),
+                           .ready(permutation_ready)
                           );
   
     //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
-  assign ready  = ready_reg;
   assign result = result_reg;
+  assign fail   = fail_reg;
+  assign ready  = ready_reg;
 
 
   //----------------------------------------------------------------
@@ -123,14 +131,19 @@ module ascon_core(
   //----------------------------------------------------------------
   always @ (posedge clk or negedge reset_n)begin: reg_update
     if (!reset_n) begin
-      ready_reg           <= 1'h0;
       result_reg          <= 128'h0;
+      fail_reg            <= 1'h0;
+      ready_reg           <= 1'h0;
       ascon_core_ctrl_reg <= CTRL_IDLE;
     end
 
     else begin
       if (ready_we) begin
 	    ready_reg <= ready_new;
+      end
+
+      if (fail_we) begin
+	    fail_reg <= fail_new;
       end
 
       if (result_we) begin
@@ -152,6 +165,8 @@ module ascon_core(
   always @*
     begin : ascon_core_ctrl
       result_we              = 1'h0;
+      fail_new               = 1'h0;
+      fail_we                = 1'h0;
       ready_new              = 1'h0;
       ready_we               = 1'h0;
       ascon_core_ctrl_new    = CTRL_IDLE;

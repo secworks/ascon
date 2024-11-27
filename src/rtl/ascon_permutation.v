@@ -49,7 +49,7 @@ module ascon_permutation(
                          input wire            start,
                          
                          output wire           ready,
-                         output wire [319 : 0] result
+                         output wire [319 : 0] state
                         );
 
 
@@ -213,7 +213,7 @@ module ascon_permutation(
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
   assign ready  = ready_reg;
-  assign result = {s0_reg, s1_reg, s2_reg, s3_reg, s4_reg};
+  assign state = {s0_reg, s1_reg, s2_reg, s3_reg, s4_reg};
 
 
   //----------------------------------------------------------------

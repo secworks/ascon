@@ -93,7 +93,6 @@ module ascon(
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
-  reg encdec_reg;
   reg ad_reg;
   reg config_we;
 
@@ -119,10 +118,13 @@ module ascon(
   //----------------------------------------------------------------
   reg [31 : 0]   tmp_read_data;
 
-  wire           core_ready;
   wire [127 : 0] core_key;
-  wire [127 : 0] core_block;
+  wire [127 : 0] core_nonce;
+  wire [127 : 0] core_data;
+  wire [2 : 0]   core_mode;
   wire [127 : 0] core_result;
+  wire           core_fail;
+  wire           core_ready;
 
 
   //----------------------------------------------------------------
@@ -130,8 +132,8 @@ module ascon(
   //----------------------------------------------------------------
   assign read_data = tmp_read_data;
 
-  assign core_key = {key_reg[3], key_reg[2], key_reg[1], key_reg[0]};
-  assign core_block  = {block_reg[3], block_reg[2], block_reg[1], block_reg[0]};
+  assign core_key  = {key_reg[3], key_reg[2], key_reg[1], key_reg[0]};
+  assign core_data = {block_reg[3], block_reg[2], block_reg[1], block_reg[0]};
 
 
   //----------------------------------------------------------------
@@ -141,16 +143,18 @@ module ascon(
                   .clk(clk),
                   .reset_n(reset_n),
 
-                  .encdec(encdec_reg),
                   .init(init_reg),
                   .next(next_reg),
                   .finalize(finalize_reg),
-                  .ready(core_ready),
-
+                  .mode(core_mode),
+                  
                   .key(core_key),
+                  .nonce(core_nonce),
+                  .data(core_data),
 
-                  .block(core_block),
-                  .result(core_result)
+                  .result(core_result),
+                  .fail(core_fail),
+                  .ready(core_ready)
                  );
 
 
@@ -172,16 +176,11 @@ module ascon(
         init_reg     <= 1'h0;
         next_reg     <= 1'h0;
         finalize_reg <= 1'h0;
-        encdec_reg   <= 1'h0;
       end
       else begin
         init_reg     <= init_new;
         next_reg     <= next_new;
         finalize_reg <= finalize_new;
-
-        if (config_we) begin
-          encdec_reg <= write_data[CONFIG_ENCDEC_BIT];
-        end
 
         if (key_we) begin
           key_reg[address[1 : 0]] <= write_data;
